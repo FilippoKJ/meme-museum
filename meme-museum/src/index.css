@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0e0e0e; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #7c5cbf; }
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background-color: #0e0e0e;
+  color: #f0f0f0;
+  font-family: 'Space Mono', monospace;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+/* ── Starburst ── */
+.starburst-svg {
+  animation: spin 20s linear infinite;
+}
+.starburst-text-wrap {
+  animation: spinReverse 20s linear infinite;
+}
+
+/* ── Float ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes spinReverse {
+  to { transform: rotate(-360deg); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-float       { animation: float 4s ease-in-out infinite; }
+.animate-float-1     { animation: float 4s ease-in-out 0.5s infinite; }
+.animate-float-2     { animation: float 4s ease-in-out 1s infinite; }
+.animate-float-3     { animation: float 4s ease-in-out 1.5s infinite; }
+.animate-fade-up     { animation: fadeUp 0.7s ease both; }
+.animate-fade-up-d   { animation: fadeUp 0.7s ease 0.25s both; }
+.animate-slide-in    { animation: slideIn 0.5s ease both; }
+
+/* ── Card hover ── */
+.meme-card-hover {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.meme-card-hover:hover {
+  transform: translateY(-5px);
+  border-color: #7c5cbf;
+}
+
+/* ── Tag ── */
+.tag-pill {
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.tag-pill:hover {
+  background: #7c5cbf;
+  color: #fff;
+  border-color: #7c5cbf;
+}
+
+/* ── Search input ── */
+.search-input::placeholder { color: #666; }
+.search-input:focus { outline: none; }
+
+/* ── Grain overlay ── */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Hero title ── */
+.hero-title-shadow {
+  font-weight: 900;
+}
