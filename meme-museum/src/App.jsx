@@ -91,8 +91,14 @@ const SortBar = ({ filters, updateFilter, updateFilters, resetFilters }) => {
   return (
     <div className="flex flex-col md:flex-row md:items-center gap-3 mb-5 w-full">
       
+      {/* IL FIX: Stile iniettato per nascondere l'orribile scrollbar orizzontale su mobile senza perdere lo swipe */}
+      <style>{`
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       {/* Sort rapido */}
-      <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl p-1 border border-[#222] max-w-full overflow-x-auto">
+      <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl p-1 border border-[#222] max-w-full overflow-x-auto hide-scroll">
         {Object.entries(SORT_LABELS).map(([val, label]) => (
           <button
             key={val}
@@ -156,6 +162,18 @@ function AppContent() {
 
   const isSearching = !!filters.search?.trim();
 
+  // Funzione dinamica per il titolo della griglia
+  const getGridTitle = () => {
+    if (isSearching) return 'RISULTATI RICERCA';
+    switch (filters.sortBy) {
+      case 'date_asc':   return 'MEME MENO RECENTI';
+      case 'votes_desc': return 'MEME PIÙ VOTATI';
+      case 'votes_asc':  return 'MEME MENO VOTATI';
+      case 'date_desc':
+      default:           return 'ULTIMI MEME';
+    }
+  };
+
   return (
     <div className="grain min-h-screen bg-bg">
       <Navbar
@@ -190,8 +208,8 @@ function AppContent() {
       {/* Griglia meme */}
       <section id="meme-grid" className="max-w-[1440px] mx-auto px-6 pb-20" style={{ paddingTop: isSearching ? '2rem' : '0' }}>
         <div className="flex items-baseline gap-3 mb-1">
-          <h2 className="font-bebas text-4xl tracking-wider text-white">
-            {isSearching ? 'RISULTATI RICERCA' : 'ULTIMI MEME'}
+          <h2 className="font-bebas text-4xl tracking-wider text-white uppercase">
+            {getGridTitle()}
           </h2>
           {!loading && filters.tag && (
             <span className="font-bebas text-2xl text-[#7c5cbf] tracking-wide">#{filters.tag}</span>

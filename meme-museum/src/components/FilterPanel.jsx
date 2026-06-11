@@ -40,9 +40,10 @@ export default function FilterPanel({ onClose }) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* IL FIX: Sfondo super leggero per la GPU senza blur, isolato dal contenuto */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40"
+        style={{ background: 'rgba(5, 5, 5, 0.85)' }}
         onClick={onClose}
       />
 
