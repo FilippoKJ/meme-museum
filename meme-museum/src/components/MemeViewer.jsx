@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useMemes } from '../context/MemesContext';
 import { useComments } from '../hooks/useComments';
 import { useAuth } from '../context/AuthContext';
-
-const API_URL = 'http://localhost:4000';
+import { API_URL } from '../config';
 
 /* ── Placeholder immagine ── */
 const MemeImage = ({ src, tags = [] }) => {
@@ -11,9 +10,9 @@ const MemeImage = ({ src, tags = [] }) => {
   const fullSrc = src?.startsWith('/api') ? `${API_URL}${src}` : src;
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-[#111] relative overflow-hidden">
+    <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
       {fullSrc ? (
-        <img src={fullSrc} alt={label} className="max-w-full max-h-full object-contain" />
+        <img src={fullSrc} alt={label} className="w-full h-full object-contain" />
       ) : (
         <div className="flex flex-col items-center gap-4 text-[#333]">
           <svg width="80" height="80" fill="none" stroke="currentColor" strokeWidth="0.8" viewBox="0 0 24 24">
@@ -28,22 +27,25 @@ const MemeImage = ({ src, tags = [] }) => {
   );
 };
 
-/* ── Tasto azione laterale ── */
+/* ── Tasto azione laterale (Ottimizzato per Mobile) ── */
 const ActionBtn = ({ icon, label, active, color = '#fff', onClick, disabled }) => (
   <button
     onClick={onClick}
     disabled={disabled}
-    className="flex flex-col items-center gap-1 transition-transform active:scale-90"
+    className="flex flex-col items-center gap-1.5 transition-transform active:scale-90"
     style={{ background: 'none', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', padding: 0, opacity: disabled ? 0.4 : 1 }}
   >
-    <div className="w-12 h-12 rounded-full flex items-center justify-center transition-all"
+    <div className="w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all shadow-xl backdrop-blur-sm"
       style={{
-        background: active ? color + '22' : 'rgba(255,255,255,0.08)',
+        background: active ? color + '40' : 'rgba(0,0,0,0.75)', /* Sfondo scuro sempre visibile */
         border: `1.5px solid ${active ? color : 'rgba(255,255,255,0.15)'}`,
       }}>
-      <span style={{ color: active ? color : '#ccc', fontSize: 22 }}>{icon}</span>
+      <span style={{ color: active ? color : '#fff', fontSize: 20 }}>{icon}</span>
     </div>
-    <span className="font-mono text-[10px]" style={{ color: active ? color : '#888' }}>{label}</span>
+    <span className="font-mono text-[10px] md:text-[11px] font-bold" 
+          style={{ color: active ? color : '#fff', textShadow: '0px 2px 4px rgba(0,0,0,0.8)' }}>
+      {label}
+    </span>
   </button>
 );
 
@@ -212,7 +214,6 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
       if (e.key === 'ArrowDown') goTo('down');
       if (e.key === 'ArrowUp')   goTo('up');
       if (e.key === 'Escape') {
-        // Ottimizzato anche per il tasto ESC fisica
         if (showComments) setShowComments(false);
         else onClose();
       }
@@ -227,13 +228,12 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
     castVote(meme.id, type);
   };
 
-  // IL FIX CRITICO: Funzione centralizzata per gestire il click-outside in modo condizionale
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       if (showComments) {
-        setShowComments(false); // Chiude solo la chat se è aperta
+        setShowComments(false);
       } else {
-        onClose(); // Chiude tutto il carosello se la chat era già chiusa
+        onClose();
       }
     }
   };
@@ -264,7 +264,7 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
 
         {/* Pannello immagine */}
         <div className="relative flex-shrink-0"
-          style={{ width: 'min(100vw, calc(100vh * 9 / 16))', height: '100dvh', background: '#111' }}>
+          style={{ width: 'min(100vw, calc(100vh * 9 / 16))', height: '100dvh' }}>
 
           <MemeImage src={meme.src} tags={meme.tags ?? []} />
 
@@ -279,7 +279,7 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
                 </span>
               ))}
             </div>
-            <p className="text-white text-sm font-mono leading-relaxed pointer-events-auto" style={{ maxWidth: 340 }}>
+            <p className="text-white text-sm font-mono leading-relaxed pointer-events-auto drop-shadow-md" style={{ maxWidth: 340 }}>
               {meme.description || `Un meme sulla categoria #${(meme.tags ?? [])[0]}.`}
             </p>
           </div>
@@ -294,9 +294,9 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
           )}
         </div>
 
-        {/* Sidebar azioni */}
-        <div className="absolute flex flex-col items-center gap-5"
-          style={{ right: 'max(16px, calc((100vw - min(100vw, calc(100vh*9/16))) / 2 - 72px))', bottom: 120 }}>
+        {/* Sidebar azioni - Z-index alzato e posizione ritoccata per i telefoni */}
+        <div className="absolute flex flex-col items-center gap-4 md:gap-5 z-40"
+          style={{ right: 'max(16px, calc((100vw - min(100vw, calc(100vh*9/16))) / 2 - 72px))', bottom: 130 }}>
           <ActionBtn icon="▲" label={vote.up}   active={vote.mine === 'up'}   color="#4ade80" onClick={() => handleVote('up')} />
           <ActionBtn icon="▼" label={vote.down}  active={vote.mine === 'down'} color="#f87171" onClick={() => handleVote('down')} />
           <ActionBtn icon="💬" label="Chat"       active={showComments}          color="#7c5cbf" onClick={() => setShowComments(v => !v)} />
@@ -310,17 +310,17 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
         </div>
       </div>
 
-      {/* Frecce desktop (nascoste se i commenti sono aperti) */}
+      {/* Frecce desktop: Aggiunto "hidden md:flex" per farle scomparire su mobile */}
       {index > 0 && !showComments && (
         <button onClick={() => goTo('up')}
-          className="absolute flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
+          className="hidden md:flex absolute items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
           style={{ top: 20, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(255,255,255,0.12)' }}>
           <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </button>
       )}
       {index < memes.length - 1 && !showComments && (
         <button onClick={() => goTo('down')}
-          className="absolute flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
+          className="hidden md:flex absolute items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
           style={{ bottom: 20, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(255,255,255,0.12)' }}>
           <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
