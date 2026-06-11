@@ -8,9 +8,8 @@ import MemeViewer from './components/MemeViewer';
 import LoginModal from './components/LoginModal';
 import FilterPanel from './components/FilterPanel';
 import MemeOfDayModal from './components/MemeOfDayModal';
+import UploadModal from './components/UploadModal';
 import './index.css';
-
-const ALL_TAGS = ['stinkypussy', 'npc', 'chad', 'based', 'wojak', 'cursed', 'gigachad', 'doomer'];
 
 const SORT_LABELS = {
   date_desc:  '📅 Più recenti',
@@ -90,14 +89,15 @@ const SortBar = ({ filters, updateFilter, updateFilters, resetFilters }) => {
     filters.dateFrom || filters.dateTo;
 
   return (
-    <div className="flex items-center gap-3 mb-5 flex-wrap">
+    <div className="flex flex-col md:flex-row md:items-center gap-3 mb-5 w-full">
+      
       {/* Sort rapido */}
-      <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl p-1 border border-[#222]">
+      <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl p-1 border border-[#222] max-w-full overflow-x-auto">
         {Object.entries(SORT_LABELS).map(([val, label]) => (
           <button
             key={val}
             onClick={() => updateFilter('sortBy', val)}
-            className="px-3 py-1.5 rounded-lg text-xs font-mono transition-all whitespace-nowrap"
+            className="px-3 py-1.5 rounded-lg text-xs font-mono transition-all whitespace-nowrap flex-shrink-0"
             style={{
               background: filters.sortBy === val ? '#7c5cbf' : 'transparent',
               color: filters.sortBy === val ? '#fff' : '#666',
@@ -107,26 +107,29 @@ const SortBar = ({ filters, updateFilter, updateFilters, resetFilters }) => {
       </div>
 
       {/* Filtri attivi */}
-      {filters.tag && (
-        <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-xl"
-          style={{ background: 'rgba(124,92,191,0.18)', border: '1px solid rgba(124,92,191,0.35)', color: '#c4a8ff' }}>
-          #{filters.tag}
-          <button onClick={() => updateFilter('tag', '')} className="hover:text-white transition-colors">✕</button>
-        </span>
-      )}
-      {(filters.dateFrom || filters.dateTo) && (
-        <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-xl"
-          style={{ background: 'rgba(240,224,64,0.1)', border: '1px solid rgba(240,224,64,0.25)', color: '#f0e040' }}>
-          {filters.dateFrom || '…'} → {filters.dateTo || '…'}
-          <button onClick={() => updateFilters({ dateFrom: '', dateTo: '' })} className="hover:text-white transition-colors">✕</button>
-        </span>
-      )}
-      {hasFilters && (
-        <button onClick={resetFilters}
-          className="text-xs font-mono text-[#555] hover:text-[#f87171] transition-colors ml-auto">
-          Reset filtri
-        </button>
-      )}
+      <div className="flex flex-wrap items-center gap-2 flex-1 w-full">
+        {filters.tag && (
+          <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-xl"
+            style={{ background: 'rgba(124,92,191,0.18)', border: '1px solid rgba(124,92,191,0.35)', color: '#c4a8ff' }}>
+            #{filters.tag}
+            <button onClick={() => updateFilter('tag', '')} className="hover:text-white transition-colors">✕</button>
+          </span>
+        )}
+        {(filters.dateFrom || filters.dateTo) && (
+          <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-xl"
+            style={{ background: 'rgba(240,224,64,0.1)', border: '1px solid rgba(240,224,64,0.25)', color: '#f0e040' }}>
+            {filters.dateFrom || '…'} → {filters.dateTo || '…'}
+            <button onClick={() => updateFilters({ dateFrom: '', dateTo: '' })} className="hover:text-white transition-colors">✕</button>
+          </span>
+        )}
+        {hasFilters && (
+          <button onClick={resetFilters}
+            className="text-xs font-mono text-[#555] hover:text-[#f87171] transition-colors md:ml-auto">
+            Reset filtri
+          </button>
+        )}
+      </div>
+      
     </div>
   );
 };
@@ -141,15 +144,17 @@ function AppContent() {
   const [showLogin,     setShowLogin]     = useState(false);
   const [showFilters,   setShowFilters]   = useState(false);
   const [showMemeOfDay, setShowMemeOfDay] = useState(false);
+  const [showUpload,    setShowUpload]    = useState(false);
 
   const openViewer = (i) => { setViewerIndex(i); document.body.style.overflow = 'hidden'; };
   const closeViewer = ()  => { setViewerIndex(null); document.body.style.overflow = ''; };
 
   const handleTagClick = (tag) => {
     updateFilter('tag', tag);
-    // scroll alla griglia
     document.getElementById('meme-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const isSearching = !!filters.search?.trim();
 
   return (
     <div className="grain min-h-screen bg-bg">
@@ -157,32 +162,37 @@ function AppContent() {
         onLoginClick={() => setShowLogin(true)}
         onFilterClick={() => setShowFilters(true)}
         onMemeOfDay={() => setShowMemeOfDay(true)}
+        onUploadClick={() => setShowUpload(true)}
       />
 
       <Hero />
       <HeroDivider />
 
-      {/* Featured + TagSidebar */}
-      <main className="max-w-6xl mx-auto px-6 py-7 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-7">
-        {loading
-          ? <div className="bg-card border border-border rounded-xl animate-pulse" style={{ aspectRatio: '16/10' }} />
-          : <FeaturedMeme
-              src={memes[0]?.src ?? null}
-              tags={memes[0]?.tags ?? []}
-              onClick={() => openViewer(0)}
-            />
-        }
-        <TagSidebar
-          tags={ALL_TAGS}
-          activeTag={filters.tag}
-          onTagClick={handleTagClick}
-        />
-      </main>
+      {/* Sezione Featured + TagSidebar */}
+      {!isSearching && (
+        <main className="max-w-[1440px] mx-auto px-6 py-7 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-7">
+          {loading
+            ? <div className="bg-card border border-border rounded-xl animate-pulse" style={{ aspectRatio: '16/10' }} />
+            : <FeaturedMeme
+                src={memes[0]?.src ?? null}
+                tags={memes[0]?.tags ?? []}
+                onClick={() => openViewer(0)}
+              />
+          }
+          <TagSidebar
+            tags={memes[0]?.tags ?? []}
+            activeTag={filters.tag}
+            onTagClick={handleTagClick}
+          />
+        </main>
+      )}
 
       {/* Griglia meme */}
-      <section id="meme-grid" className="max-w-6xl mx-auto px-6 pb-20">
+      <section id="meme-grid" className="max-w-[1440px] mx-auto px-6 pb-20" style={{ paddingTop: isSearching ? '2rem' : '0' }}>
         <div className="flex items-baseline gap-3 mb-1">
-          <h2 className="font-bebas text-4xl tracking-wider text-white">ULTIMI MEME</h2>
+          <h2 className="font-bebas text-4xl tracking-wider text-white">
+            {isSearching ? 'RISULTATI RICERCA' : 'ULTIMI MEME'}
+          </h2>
           {!loading && filters.tag && (
             <span className="font-bebas text-2xl text-[#7c5cbf] tracking-wide">#{filters.tag}</span>
           )}
@@ -204,7 +214,8 @@ function AppContent() {
                 <GridCard
                   key={meme.id}
                   tags={meme.tags}
-                  likes={votes[meme.id]?.up ?? meme.likes}
+                  upvotes={votes[meme.id]?.up ?? meme.likes}
+                  downvotes={votes[meme.id]?.down ?? meme.dislikes}
                   src={meme.src}
                   createdAt={meme.createdAt}
                   onClick={() => openViewer(i)}
@@ -243,6 +254,13 @@ function AppContent() {
         <MemeOfDayModal
           onClose={() => setShowMemeOfDay(false)}
           onLoginNeeded={() => { setShowMemeOfDay(false); setShowLogin(true); }}
+        />
+      )}
+      {/* Modale Upload */}
+      {showUpload && (
+        <UploadModal 
+          onClose={() => setShowUpload(false)} 
+          onSuccess={() => window.location.reload()} 
         />
       )}
     </div>

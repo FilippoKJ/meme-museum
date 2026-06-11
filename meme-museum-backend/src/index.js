@@ -22,8 +22,10 @@ const PORT = process.env.PORT ?? 4000;
    MIDDLEWARE GLOBALI
 ══════════════════════════════════════════════════════ */
 
-// Sicurezza HTTP headers
-app.use(helmet());
+// 🛠️ IL FIX: Configura Helmet per permettere il caricamento delle immagini dal frontend (Porta 3000)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS — accetta solo richieste dal frontend configurato
 app.use(cors({
@@ -33,8 +35,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Body parsing
-app.use(express.json({ limit: '1mb' }));
+// Body parsing (limite aumentato a 10mb per permettere l'upload di immagini Base64)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Rate limiting globale (100 req/minuto per IP)
 app.use(rateLimit({

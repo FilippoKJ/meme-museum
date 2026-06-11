@@ -1,8 +1,6 @@
 -- ══════════════════════════════════════════════════════
 --  schema.sql  —  Meme Museum  —  Neon DB (PostgreSQL)
 -- ══════════════════════════════════════════════════════
--- Incolla questo file nella SQL console di Neon oppure
--- esegui:  node src/db/migrate.js
 
 -- Estensione UUID
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -28,6 +26,14 @@ CREATE TABLE IF NOT EXISTS memes (
 );
 
 CREATE INDEX IF NOT EXISTS idx_memes_created_at ON memes(created_at DESC);
+
+-- ── MEME_IMAGES (IL FIX PER L'UPLOAD) ────────────────────
+CREATE TABLE IF NOT EXISTS meme_images (
+  meme_id    UUID NOT NULL REFERENCES memes(id) ON DELETE CASCADE,
+  mime_type  VARCHAR(50) NOT NULL,
+  image_data TEXT NOT NULL,
+  PRIMARY KEY (meme_id)
+);
 
 -- ── TAGS ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS tags (
@@ -71,8 +77,6 @@ CREATE INDEX IF NOT EXISTS idx_comments_meme_id    ON comments(meme_id);
 CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at);
 
 -- ── VIEW: memes_with_counts ──────────────────────────────
--- FIX: aggregazioni separate per votes e comments per evitare
--- il prodotto cartesiano che gonfiava i conteggi.
 CREATE OR REPLACE VIEW memes_with_counts AS
 SELECT
   m.id,
@@ -81,7 +85,6 @@ SELECT
   m.created_at,
   m.uploaded_by,
 
-  -- Voti aggregati con subquery correlata → nessun prodotto cartesiano
   COALESCE((
     SELECT COUNT(*) FROM votes v
     WHERE v.meme_id = m.id AND v.type = 'up'
@@ -92,13 +95,11 @@ SELECT
     WHERE v.meme_id = m.id AND v.type = 'down'
   ), 0)::INT AS dislikes,
 
-  -- Commenti
   COALESCE((
     SELECT COUNT(*) FROM comments c
     WHERE c.meme_id = m.id
   ), 0)::INT AS comment_count,
 
-  -- Tags aggregati come array
   COALESCE((
     SELECT ARRAY_AGG(t.name ORDER BY t.name)
     FROM meme_tags mt

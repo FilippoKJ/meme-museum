@@ -1,14 +1,9 @@
-/**
- * components/LoginModal.jsx
- * Modale login/registrazione. Usa AuthContext.
- */
-
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginModal({ onClose }) {
   const { login, register, error, setError } = useAuth();
-  const [mode, setMode]         = useState('login'); // 'login' | 'register'
+  const [mode, setMode]         = useState('login'); 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -47,17 +42,19 @@ export default function LoginModal({ onClose }) {
   const onKey = (e) => { if (e.key === 'Enter') handleSubmit(); };
 
   return (
-    /* Backdrop */
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      
+      {/* Sfondo super leggero per la GPU senza blur */}
       <div
-        className="w-full max-w-sm mx-4 rounded-2xl p-7 flex flex-col gap-5"
+        className="absolute inset-0"
+        style={{ background: 'rgba(5, 5, 5, 0.96)' }}
+        onClick={onClose}
+      />
+
+      <div
+        className="relative z-10 w-full max-w-sm mx-auto rounded-2xl p-7 flex flex-col gap-5 animate-fade-up"
         style={{ background: '#161616', border: '1px solid #2a2a2a' }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="font-bebas text-3xl text-white tracking-wide">
             {mode === 'login' ? 'LOGIN' : 'REGISTRATI'}
@@ -68,21 +65,18 @@ export default function LoginModal({ onClose }) {
           >✕</button>
         </div>
 
-        {/* Hint dev */}
         {mode === 'login' && (
           <p className="text-[10px] font-mono text-[#555] bg-[#111] rounded-lg px-3 py-2 border border-[#222]">
             💡 Dev mode: usa <span className="text-[#7c5cbf]">test / test</span>
           </p>
         )}
 
-        {/* Errore */}
         {err && (
           <div className="text-xs font-mono text-red-400 bg-red-950/40 border border-red-900/50 rounded-lg px-3 py-2">
             {err}
           </div>
         )}
 
-        {/* Campi */}
         <div className="flex flex-col gap-3">
           <input
             type="text"
@@ -103,7 +97,6 @@ export default function LoginModal({ onClose }) {
           />
         </div>
 
-        {/* Submit */}
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -117,7 +110,6 @@ export default function LoginModal({ onClose }) {
           {loading ? 'Attendere...' : mode === 'login' ? 'Entra' : 'Crea account'}
         </button>
 
-        {/* Switch mode */}
         <p className="text-center text-xs font-mono text-[#555]">
           {mode === 'login' ? 'Non hai un account?' : 'Hai già un account?'}{' '}
           <button

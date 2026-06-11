@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 22px; 
+}
+
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0e0e0e; }
@@ -27,37 +31,38 @@ body {
   animation: spinReverse 20s linear infinite;
 }
 
-/* ── Float ── */
+/* ── Performance-Optimized Animations (Hardware Accelerated) ── */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-12px); }
+  0%, 100% { transform: translateY(0px) translateZ(0); }
+  50%       { transform: translateY(-12px) translateZ(0); }
 }
 @keyframes spinReverse {
-  to { transform: rotate(-360deg); }
+  to { transform: rotate(-360deg) translateZ(0); }
 }
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) translateZ(0); }
+  to   { opacity: 1; transform: translateY(0) translateZ(0); }
 }
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(-16px) translateZ(0); }
+  to   { opacity: 1; transform: translateX(0) translateZ(0); }
 }
 
-.animate-float       { animation: float 4s ease-in-out infinite; }
-.animate-float-1     { animation: float 4s ease-in-out 0.5s infinite; }
-.animate-float-2     { animation: float 4s ease-in-out 1s infinite; }
-.animate-float-3     { animation: float 4s ease-in-out 1.5s infinite; }
-.animate-fade-up     { animation: fadeUp 0.7s ease both; }
-.animate-fade-up-d   { animation: fadeUp 0.7s ease 0.25s both; }
-.animate-slide-in    { animation: slideIn 0.5s ease both; }
+.animate-float       { animation: float 4s ease-in-out infinite; will-change: transform; }
+.animate-float-1     { animation: float 4s ease-in-out 0.5s infinite; will-change: transform; }
+.animate-float-2     { animation: float 4s ease-in-out 1s infinite; will-change: transform; }
+.animate-float-3     { animation: float 4s ease-in-out 1.5s infinite; will-change: transform; }
+.animate-fade-up     { animation: fadeUp 0.4s cubic-bezier(.4,0,.2,1) both; will-change: transform, opacity; }
+.animate-fade-up-d   { animation: fadeUp 0.4s cubic-bezier(.4,0,.2,1) 0.15s both; will-change: transform, opacity; }
+.animate-slide-in    { animation: slideIn 0.4s cubic-bezier(.4,0,.2,1) both; will-change: transform, opacity; }
 
 /* ── Card hover ── */
 .meme-card-hover {
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s cubic-bezier(.4,0,.2,1), border-color 0.2s ease;
+  will-change: transform;
 }
 .meme-card-hover:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px) translateZ(0);
   border-color: #7c5cbf;
 }
 
@@ -75,15 +80,17 @@ body {
 .search-input::placeholder { color: #666; }
 .search-input:focus { outline: none; }
 
-/* ── Grain overlay ── */
+/* ── IL FIX CRITICO: Grain spostato dietro i modali ── */
 .grain::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.025;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/OqR9AAAACHRSTlMAMwBmMwBmMyB+0kAAAAA0SURBVDjLxY2xEQAwCAPP2f8Kj1kghCgZg22q3L2b0s9mHxH2D/aA7AHZA7IHZA/IPsR+8QCWxQG2sI1bXwAAAABJRU5ErkJggg==");
+  background-repeat: repeat;
+  opacity: 0.05;
   pointer-events: none;
-  z-index: 9999;
+  z-index: 30; /* <--- ERA 9999. Ora i modali ci vanno sopra e digitare non fa laggare il browser! */
+  transform: translateZ(0);
 }
 
 /* ── Hero title ── */

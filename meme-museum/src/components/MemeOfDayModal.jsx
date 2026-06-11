@@ -7,6 +7,8 @@ import React, { useEffect } from 'react';
 import { useMemes } from '../context/MemesContext';
 import { useAuth } from '../context/AuthContext';
 
+const API_URL = 'http://localhost:4000';
+
 export default function MemeOfDayModal({ onClose, onLoginNeeded }) {
   const { memeOfDay, modLoading, fetchMemeOfDay, votes, castVote } = useMemes();
   const { user } = useAuth();
@@ -14,6 +16,9 @@ export default function MemeOfDayModal({ onClose, onLoginNeeded }) {
   useEffect(() => { fetchMemeOfDay(); }, [fetchMemeOfDay]);
 
   const vote = memeOfDay ? (votes[memeOfDay.id] ?? { up: memeOfDay.likes, down: 0, mine: null }) : null;
+  
+  // Risoluzione dell'URL dell'immagine dal backend
+  const fullSrc = memeOfDay?.src?.startsWith('/api') ? `${API_URL}${memeOfDay.src}` : memeOfDay?.src;
 
   const handleVote = (type) => {
     if (!user) { onClose(); onLoginNeeded?.(); return; }
@@ -65,8 +70,8 @@ export default function MemeOfDayModal({ onClose, onLoginNeeded }) {
             <>
               {/* Immagine */}
               <div className="w-full bg-[#111] flex items-center justify-center" style={{ aspectRatio: '16/10' }}>
-                {memeOfDay.src ? (
-                  <img src={memeOfDay.src} alt={memeOfDay.tags[0]} className="w-full h-full object-cover" />
+                {fullSrc ? (
+                  <img src={fullSrc} alt={memeOfDay.tags[0]} className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex flex-col items-center gap-3 text-[#333]">
                     <svg width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">

@@ -3,13 +3,17 @@ import { useMemes } from '../context/MemesContext';
 import { useComments } from '../hooks/useComments';
 import { useAuth } from '../context/AuthContext';
 
+const API_URL = 'http://localhost:4000';
+
 /* ── Placeholder immagine ── */
 const MemeImage = ({ src, tags = [] }) => {
   const label = tags[0] ?? '';
+  const fullSrc = src?.startsWith('/api') ? `${API_URL}${src}` : src;
+
   return (
     <div className="w-full h-full flex items-center justify-center bg-[#111] relative overflow-hidden">
-      {src ? (
-        <img src={src} alt={label} className="max-w-full max-h-full object-contain" />
+      {fullSrc ? (
+        <img src={fullSrc} alt={label} className="max-w-full max-h-full object-contain" />
       ) : (
         <div className="flex flex-col items-center gap-4 text-[#333]">
           <svg width="80" height="80" fill="none" stroke="currentColor" strokeWidth="0.8" viewBox="0 0 24 24">
@@ -56,7 +60,7 @@ const NavIndicator = ({ current, total }) => (
   </div>
 );
 
-/* ── Pannello commenti — usa useComments hook ── */
+/* ── Pannello commenti ── */
 const CommentsPanel = ({ memeId, onClose, onLoginNeeded }) => {
   const { user } = useAuth();
   const { comments, loading, error, posting, postComment } = useComments(memeId);
@@ -77,8 +81,7 @@ const CommentsPanel = ({ memeId, onClose, onLoginNeeded }) => {
   };
 
   return (
-    <div className="absolute inset-0 z-30 flex flex-col"
-      style={{ background: 'rgba(0,0,0,0.93)', backdropFilter: 'blur(10px)' }}>
+    <div className="absolute inset-0 z-30 flex flex-col" style={{ background: 'rgba(10, 10, 10, 0.98)' }}>
       <div className="flex items-center justify-between px-5 py-4 border-b border-[#222]">
         <span className="font-mono text-sm text-white tracking-widest uppercase">
           Commenti {loading ? '…' : `(${comments.length})`}
@@ -161,7 +164,7 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
   const wheelLocked  = useRef(false);
 
   const meme = memes[index];
-  const vote = votes[meme?.id] ?? { up: meme?.likes ?? 0, down: 0, mine: null };
+  const vote = votes[meme?.id] ?? { up: meme?.likes ?? 0, down: meme?.dislikes ?? 0, mine: null };
 
   /* ── Navigazione ── */
   const goTo = useCallback((dir) => {
@@ -208,16 +211,31 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
     const h = (e) => {
       if (e.key === 'ArrowDown') goTo('down');
       if (e.key === 'ArrowUp')   goTo('up');
-      if (e.key === 'Escape')    onClose();
+      if (e.key === 'Escape') {
+        // Ottimizzato anche per il tasto ESC fisica
+        if (showComments) setShowComments(false);
+        else onClose();
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [goTo, onClose]);
+  }, [goTo, onClose, showComments]);
 
   /* ── Voto ── */
   const handleVote = (type) => {
     if (!user) { onLoginNeeded?.(); return; }
     castVote(meme.id, type);
+  };
+
+  // IL FIX CRITICO: Funzione centralizzata per gestire il click-outside in modo condizionale
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      if (showComments) {
+        setShowComments(false); // Chiude solo la chat se è aperta
+      } else {
+        onClose(); // Chiude tutto il carosello se la chat era già chiusa
+      }
+    }
   };
 
   const slideStyle = transitioning
@@ -228,7 +246,8 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black"
-      ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      ref={containerRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}
+      onClick={handleBackdropClick}>
 
       {/* Close */}
       <button onClick={onClose}
@@ -240,7 +259,8 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
       </button>
 
       {/* Contenuto */}
-      <div className="relative w-full h-full flex items-center justify-center" style={slideStyle}>
+      <div className="relative w-full h-full flex items-center justify-center" style={slideStyle}
+        onClick={handleBackdropClick}>
 
         {/* Pannello immagine */}
         <div className="relative flex-shrink-0"
@@ -249,9 +269,9 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
           <MemeImage src={meme.src} tags={meme.tags ?? []} />
 
           {/* Overlay info bottom */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-20"
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-6 pt-20 pointer-events-none"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.88) 55%, transparent)' }}>
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="flex flex-wrap gap-1.5 mb-2 pointer-events-auto">
               {(meme.tags ?? []).map(t => (
                 <span key={t} className="text-xs font-mono px-2.5 py-1 rounded-full"
                   style={{ background: 'rgba(124,92,191,0.28)', border: '1px solid rgba(124,92,191,0.45)', color: '#c4a8ff' }}>
@@ -259,7 +279,7 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
                 </span>
               ))}
             </div>
-            <p className="text-white text-sm font-mono leading-relaxed" style={{ maxWidth: 340 }}>
+            <p className="text-white text-sm font-mono leading-relaxed pointer-events-auto" style={{ maxWidth: 340 }}>
               {meme.description || `Un meme sulla categoria #${(meme.tags ?? [])[0]}.`}
             </p>
           </div>
@@ -280,8 +300,6 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
           <ActionBtn icon="▲" label={vote.up}   active={vote.mine === 'up'}   color="#4ade80" onClick={() => handleVote('up')} />
           <ActionBtn icon="▼" label={vote.down}  active={vote.mine === 'down'} color="#f87171" onClick={() => handleVote('down')} />
           <ActionBtn icon="💬" label="Chat"       active={showComments}          color="#7c5cbf" onClick={() => setShowComments(v => !v)} />
-          <ActionBtn icon="↗"  label="Share"      active={false}
-            onClick={() => navigator.share?.({ title: `#${(meme.tags ?? [])[0]}`, url: window.location.href })} />
         </div>
 
         {/* Indicatore posizione */}
@@ -292,15 +310,15 @@ export default function MemeViewer({ memes, startIndex = 0, onClose, onLoginNeed
         </div>
       </div>
 
-      {/* Frecce desktop */}
-      {index > 0 && (
+      {/* Frecce desktop (nascoste se i commenti sono aperti) */}
+      {index > 0 && !showComments && (
         <button onClick={() => goTo('up')}
           className="absolute flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
           style={{ top: 20, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(255,255,255,0.12)' }}>
           <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
         </button>
       )}
-      {index < memes.length - 1 && (
+      {index < memes.length - 1 && !showComments && (
         <button onClick={() => goTo('down')}
           className="absolute flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 z-40 transition-all"
           style={{ bottom: 20, left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.4)', border: '1.5px solid rgba(255,255,255,0.12)' }}>

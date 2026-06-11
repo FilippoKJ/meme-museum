@@ -8,7 +8,7 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import sql from './pool.js';
 
-const TAGS = ['chad', 'wojak', 'cursed', 'based', 'doomer', 'gigachad', 'npc', 'stinkypussy'];
+const TAGS = ['chad', 'wojak', 'cursed', 'based', 'doomer', 'gigachad', 'npc', 'uhohstinky'];
 
 const MEMES = [
   { tags: ['chad'],                  description: 'Il classico Chad. Mascella quadrata, niente paura.',         upvotes: 420, downvotes: 12  },
@@ -18,14 +18,14 @@ const MEMES = [
   { tags: ['doomer'],                description: 'Il Doomer guarda fuori dalla finestra alle 3 di notte.',    upvotes: 777, downvotes: 21  },
   { tags: ['gigachad', 'based'],     description: 'Il Gigachad non discute. Il Gigachad esiste semplicemente.',upvotes: 2048,downvotes: 0   },
   { tags: ['npc'],                   description: 'NPC spotted. Script in loop.',                              upvotes: 314, downvotes: 42  },
-  { tags: ['stinkypussy'],           description: 'Un meme di culto. La descrizione non è necessaria.',        upvotes: 666, downvotes: 66  },
+  { tags: ['uhohstinky'],           description: 'Un meme di culto. La descrizione non è necessaria.',        upvotes: 666, downvotes: 66  },
   { tags: ['wojak', 'cursed'],       description: 'Il Wojak cursed. Un incrocio pericoloso.',                  upvotes: 88,  downvotes: 7   },
   { tags: ['chad', 'gigachad'],      description: 'Chad meets Gigachad. Chi vince?',                           upvotes: 1500,downvotes: 10  },
   { tags: ['npc', 'doomer'],         description: 'NPC doomer. Il peggior combo possibile.',                   upvotes: 200, downvotes: 30  },
   { tags: ['based'],                 description: "Purely based. Nient'altro da aggiungere.",                  upvotes: 540, downvotes: 8   },
   { tags: ['cursed', 'npc'],         description: 'NPC cursed edition. Rotto dentro.',                         upvotes: 230, downvotes: 55  },
   { tags: ['gigachad'],              description: 'Il Gigachad definitivo. Nessuna debolezza.',                 upvotes: 3000,downvotes: 2   },
-  { tags: ['stinkypussy', 'cursed'], description: "Stinkypussy cursed. Non c'è altra descrizione.",            upvotes: 420, downvotes: 69  },
+  { tags: ['uhohstinky', 'cursed'], description: "uhohstinky cursed. Non c'è altra descrizione.",            upvotes: 420, downvotes: 69  },
   { tags: ['wojak'],                 description: 'Feels bad man. Sempre.',                                    upvotes: 111, downvotes: 11  },
   { tags: ['chad', 'based'],         description: 'Chad based combo. Inarrestabile.',                          upvotes: 888, downvotes: 4   },
   { tags: ['doomer', 'cursed'],      description: 'Doomer cursed. Pensieri alle 4 di notte.',                  upvotes: 333, downvotes: 33  },
