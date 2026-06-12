@@ -2,7 +2,7 @@
  * src/routes/memes.js
  * GET    /api/memes               — lista con filtri, ordinamento, paginazione
  * POST   /api/memes               — carica un nuovo meme (Base64 o URL)
- * GET    /api/memes/today         — meme del giorno (più votato in assoluto)
+ * GET    /api/memes/today         — meme del giorno (dinamico: migliore di ieri o di sempre)
  * GET    /api/memes/:id/image     — serve l'immagine binaria dal DB
  * GET    /api/memes/:id           — singolo meme
  */
@@ -187,14 +187,26 @@ router.post('/', requireAuth, async (req, res, next) => {
 });
 
 /* ── GET /api/memes/today ── */
-// 🛠️ IL FIX: Ritorna il meme con più upvote in assoluto eliminando il blocco "CURRENT_DATE"
+// IMPORTANTE: Questa rotta DEVE stare sopra le rotte con :id
 router.get('/today', optionalAuth, async (req, res, next) => {
   try {
-    const [targetMeme] = await sql`
+    // 1. Cerca il vincitore di IERI (punteggio netto)
+    let [targetMeme] = await sql`
       SELECT * FROM memes_with_counts
-      ORDER BY likes DESC, created_at DESC
+      WHERE created_at::date = CURRENT_DATE - INTERVAL '1 day'
+      ORDER BY (likes - dislikes) DESC, created_at DESC
       LIMIT 1
     `;
+
+    // 2. Fallback al più votato di sempre
+    if (!targetMeme) {
+      const fallback = await sql`
+        SELECT * FROM memes_with_counts
+        ORDER BY (likes - dislikes) DESC, created_at DESC
+        LIMIT 1
+      `;
+      targetMeme = fallback[0];
+    }
 
     if (!targetMeme) throw new HttpError('Nessun meme disponibile nel database', 404);
 
@@ -207,11 +219,14 @@ router.get('/today', optionalAuth, async (req, res, next) => {
       myVote = v?.type ?? null;
     }
 
-    res.json(formatMeme(targetMeme, myVote));
+    const responseData = formatMeme(targetMeme, myVote);
+    responseData.score = targetMeme.likes - targetMeme.dislikes;
+
+    res.json(responseData);
   } catch (err) { next(err); }
 });
 
-/* ── GET /api/memes/:id/image (Endpoint di Distribuzione) ── */
+/* ── GET /api/memes/:id/image ── */
 router.get('/:id/image', async (req, res, next) => {
   try {
     const [img] = await sql`

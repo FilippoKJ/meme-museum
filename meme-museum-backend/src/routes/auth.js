@@ -1,10 +1,3 @@
-/**
- * src/routes/auth.js
- * POST /api/auth/register
- * POST /api/auth/login
- * GET  /api/auth/me
- */
-
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';

@@ -2,7 +2,6 @@ import React from 'react';
 
 const API_URL = 'http://localhost:4000';
 
-// Funzione helper per risolvere i percorsi delle immagini dal backend
 const getImageUrl = (src) => src?.startsWith('/api') ? `${API_URL}${src}` : src;
 
 const ImgPlaceholder = ({ tag }) => (

@@ -2,7 +2,6 @@
  * src/routes/comments.js
  * GET    /api/memes/:id/comments          — lista commenti
  * POST   /api/memes/:id/comments          — nuovo commento (auth)
- * DELETE /api/memes/:id/comments/:cid     — elimina commento (solo autore)
  */
 
 import { Router } from 'express';
@@ -70,22 +69,6 @@ router.post('/', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-/* ── DELETE ──────────────────────────────────────────── */
-router.delete('/:cid', requireAuth, async (req, res, next) => {
-  try {
-    const { id: memeId, cid } = req.params;
-    const userId              = req.user.id;
 
-    const [comment] = await sql`
-      SELECT id, user_id FROM comments WHERE id = ${cid} AND meme_id = ${memeId}
-    `;
-
-    if (!comment) throw new HttpError('Commento non trovato', 404);
-    if (comment.user_id !== userId) throw new HttpError('Non autorizzato', 403);
-
-    await sql`DELETE FROM comments WHERE id = ${cid}`;
-    res.status(204).end();
-  } catch (err) { next(err); }
-});
 
 export default router;
