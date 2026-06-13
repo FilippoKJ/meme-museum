@@ -56,6 +56,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     const conditions = [];
     const params     = [];
     let   idx        = 1;
+    
 
     if (search.trim()) {
       conditions.push(`EXISTS (
