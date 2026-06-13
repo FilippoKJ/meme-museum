@@ -194,7 +194,7 @@ router.get('/today', optionalAuth, async (req, res, next) => {
     // 1. Cerca il vincitore di IERI (punteggio netto)
     let [targetMeme] = await sql`
       SELECT * FROM memes_with_counts
-      WHERE created_at::date = CURRENT_DATE - INTERVAL '1 day'
+      WHERE created_at::date = CURRENT_DATE
       ORDER BY (likes - dislikes) DESC, created_at DESC
       LIMIT 1
     `;
